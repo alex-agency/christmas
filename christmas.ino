@@ -4,7 +4,7 @@
 #define DEBUG
 
 #define SPI_LATCH_PIN  9
-#define PIR_PIN  7
+#define PIR_PIN  6
 
 #define TIMER1_MAX  0xFFFF // 16 bit CTR
 #define TIMER1_CNT  0x130 // 32 levels --> 0x0130; 38 --> 0x0157 (flicker)
@@ -15,7 +15,7 @@
 #define MATRIX_BRIGHTNESS  21
 
 // Set up Speaker digital pin
-Melody melody(2);
+Melody melody(5);
 
 byte RED_MATRIX[MATRIX_COUNT][ROW_LEDS][MATRIX_ROWS]; 
 byte GREEN_MATRIX[MATRIX_COUNT][ROW_LEDS][MATRIX_ROWS];
@@ -24,6 +24,97 @@ byte BLUE_MATRIX[MATRIX_COUNT][ROW_LEDS][MATRIX_ROWS];
 static const uint8_t PROGMEM
 images[][8] = {    
     // Animation frames
+    { B00000000,        // Heart animation 1
+      B00000000,
+      B01101100,
+      B10010010,
+      B10000010,
+      B01000100,
+      B00101000,
+      B00010000 },
+
+    { B00000000,        // Heart animation 1.1
+      B00000000,
+      B00000000,
+      B01101100,
+      B01111100,
+      B00111000,
+      B00010000,
+      B00000000 },
+
+    { B00000000,        // Heart animation 2
+      B01101100,
+      B10010010,
+      B10000010,
+      B01000100,
+      B00101000,
+      B00010000,
+      B00000000 },
+
+    { B00000000,        // Heart animation 2.1
+      B00000000,
+      B01101100,
+      B01111100,
+      B00111000,
+      B00010000,
+      B00000000,
+      B00000000 },
+
+    { B00000000,        // Heart animation 3
+      B00110110,
+      B01001001,
+      B01000001,
+      B00100010,
+      B00010100,
+      B00001000,
+      B00000000 },
+
+    { B00000000,        // Heart animation 3.1
+      B00000000,
+      B00110110,
+      B00111110,
+      B00011100,
+      B00001000,
+      B00000000,
+      B00000000 },
+
+    { B00110110,        // Heart animation 4
+      B01001001,
+      B01000001,
+      B00100010,
+      B00010100,
+      B00001000,
+      B00000000,
+      B00000000 },
+
+    { B00000000,        // Heart animation 4.1
+      B00110110,
+      B00111110,
+      B00011100,
+      B00001000,
+      B00000000,
+      B00000000,
+      B00000000 },
+
+    { B01101100,        // Heart animation 5
+      B10010010,
+      B10000010,
+      B01000100,
+      B00101000,
+      B00010000,
+      B00000000,
+      B00000000 },
+
+    { B00000000,        // Heart animation 5.1
+      B01101100,
+      B01111100,
+      B00111000,
+      B00010000,
+      B00000000,
+      B00000000,
+      B00000000 },
+
+
     { B00011000,        // Christmas Tree
       B00011000,
       B00100100,
@@ -94,58 +185,13 @@ images[][8] = {
       B11111111,
       B01111110,
       B00111100,
-      B00011000 },
-
-    { B00000000,        // Heart animation 1
-      B00000000,
-      B01101100,
-      B10010010,
-      B10000010,
-      B01000100,
-      B00101000,
-      B00010000 },
-
-    { B00000000,        // Heart animation 2
-      B01101100,
-      B10010010,
-      B10000010,
-      B01000100,
-      B00101000,
-      B00010000,
-      B00000000 },
-
-    { B00000000,        // Heart animation 3
-      B00110110,
-      B01001001,
-      B01000001,
-      B00100010,
-      B00010100,
-      B00001000,
-      B00000000 },
-
-    { B00110110,        // Heart animation 4
-      B01001001,
-      B01000001,
-      B00100010,
-      B00010100,
-      B00001000,
-      B00000000,
-      B00000000 },
-
-    { B01101100,        // Heart animation 5
-      B10010010,
-      B10000010,
-      B01000100,
-      B00101000,
-      B00010000,
-      B00000000,
-      B00000000 }
+      B00011000 }
 };
 
-uint8_t blinkIndex[] = { 1, 2, 3, 4, 3, 2, 1 }; // Blink bitmap sequence
-unsigned long sonar = 200; // Distance to sonar in cm
-uint8_t flashCountdown = 0; // flash duration
 bool pir = false;
+uint16_t blinkCountdown = 100; // Countdown to next blink (in frames)
+bool blue = true;
+uint8_t offset = 0;
 
 // Declare serial output
 static int serial_putchar(char c, FILE *) {
@@ -265,26 +311,51 @@ void loop()
   // update melody
   melody.update();
 
-  blinkCountdown--;
-  if (blinkCountdown == 0) { 
-    blinkCountdown = random(5, 150);
-  }
+  pir = digitalRead(PIR_PIN);
 
-  if(flashCountdown == 0) {
-    pir = digitalRead(PIR_PIN);
+  blinkCountdown--;
+  if(blinkCountdown == 0) { 
+    blinkCountdown = 100;
+
+    offset=offset+2;
+    if(offset > 9)
+      offset = 0;
   }
   
-  const uint8_t* eye = 
-            &blinkImg[
-            (blinkCountdown < sizeof(blinkIndex)) ? // Currently blinking?
-            blinkIndex[blinkCountdown] :            // Yes, look up bitmap #
-            0                                       // No, show bitmap 0
-            ][0] + eyeOffset;
+  const uint8_t* matrix1 = &images[offset][0];
+  const uint8_t* matrix2 = &images[10][0];
 
-  if(--gazeCountdown <= gazeFrames && eyeOffset != BORED_EYE) {
-      // Not in motion yet -- draw pupil at current static position
-      drawEyes(eye, pupilX, pupilY);
+  draw( offset, 10, 220 );
+}
+
+void draw(uint8_t image1, uint8_t image2, uint8_t selhue) {
+  for(byte row = 0; row < MATRIX_ROWS; row++) {
+    for(byte matrix = 0; matrix < 2; matrix++) {
+      const uint8_t* m2 = &images[image2][0];
+      
+      byte image;
+      uint8_t hue;
+      const uint8_t* m1;
+      if(matrix == 0) {
+        if(blue) {
+          hue = selhue;
+          blue = false;
+          m1 = &images[image1][0];
+        } else {
+          blue = true;
+          m1 = &images[image1][0];
+          hue = 0;
+        }
+        image = pgm_read_byte_near(m1+row);      
+        set_row_hue(matrix,row,image,hue);
+      }  
+      else {
+        image = pgm_read_byte_near(m2+row);
+        set_row_hue(matrix,row,image,selhue);
+      }
+    }
   }
+  delay(5);
 }
 
 void matrix_clear() {
