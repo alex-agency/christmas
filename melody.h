@@ -118,7 +118,7 @@ private:
 											16 };
 	  beats 							= jingleBells_beats;
 
-	  tempo 							= 60;
+	  tempo 							= 60*2;
 	  numNotes 							= sizeof(jingleBells)/sizeof(uint16_t);
 	}
     // "The first noel" melody
@@ -145,7 +145,7 @@ private:
 											4,    4,    4,    4,    4,    4,    4,    8 };
 	  beats 							= firstNoel_beats;
 
-	  tempo 							= 60;
+	  tempo 							= 60*2;
 	  numNotes 							= sizeof(firstNoel)/sizeof(uint16_t);
 	}
 	// "What child is this" melody
@@ -174,7 +174,7 @@ private:
 				   							6,    4 };
 	  beats 							= whatChild_beats;
 
-	  tempo 							= 100;
+	  tempo 							= 100*2;
 	  numNotes 							= sizeof(whatChild)/sizeof(uint16_t);
 	}
 	// "R2D2" melody
@@ -187,7 +187,7 @@ private:
                                				2,    2,    2,    2,    2,    2,    2,    2 };
 	  beats 							= r2d2_beats;
 
-	  tempo 							= 40;
+	  tempo 							= 40*2;
 	  numNotes 							= sizeof(r2d2)/sizeof(uint16_t);
 	}
   };

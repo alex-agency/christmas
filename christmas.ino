@@ -189,7 +189,8 @@ images[][8] = {
 };
 
 bool pir = false;
-uint16_t blinkCountdown = 100; // Countdown to next blink (in frames)
+uint16_t imageCountdown = 100; // Countdown to next image (in frames)
+uint16_t melodyCountdown = 1000; // Countdown to next melody (in frames)
 bool blue = true;
 uint8_t offset = 0;
 
@@ -313,45 +314,39 @@ void loop()
 
   pir = digitalRead(PIR_PIN);
 
-  blinkCountdown--;
-  if(blinkCountdown == 0) { 
-    blinkCountdown = 100;
+  imageCountdown--;
+  if(imageCountdown == 0) { 
+    imageCountdown = 100;
 
     offset=offset+2;
     if(offset > 9)
       offset = 0;
-  }
-  
-  const uint8_t* matrix1 = &images[offset][0];
-  const uint8_t* matrix2 = &images[10][0];
 
-  draw( offset, 10, 220 );
+    draw( offset, (int)(random(10, 17) );
+  }
+
+  if(melodyCountdown > 0)
+    melodyCountdown--;
+  if(melodyCountdown == 0 && pir) {
+    melodyCountdown = 1000;
+    melody.play((int)(random(2, 4));
+  }
 }
 
-void draw(uint8_t image1, uint8_t image2, uint8_t selhue) {
+void draw(uint8_t imageId_1, uint8_t imageId_2) {
   for(byte row = 0; row < MATRIX_ROWS; row++) {
     for(byte matrix = 0; matrix < 2; matrix++) {
-      const uint8_t* m2 = &images[image2][0];
-      
+      const uint8_t* image1 = &images[imageId_1][0];
+      const uint8_t* image2 = &images[imageId_2][0];
+
       byte image;
-      uint8_t hue;
-      const uint8_t* m1;
       if(matrix == 0) {
-        if(blue) {
-          hue = selhue;
-          blue = false;
-          m1 = &images[image1][0];
-        } else {
-          blue = true;
-          m1 = &images[image1][0];
-          hue = 0;
-        }
-        image = pgm_read_byte_near(m1+row);      
-        set_row_hue(matrix,row,image,hue);
+        image = pgm_read_byte_near(image1+row);      
+        set_row_hue(matrix,row,image,(int)(random(360));
       }  
       else {
-        image = pgm_read_byte_near(m2+row);
-        set_row_hue(matrix,row,image,selhue);
+        image = pgm_read_byte_near(image2+row);
+        set_row_hue(matrix,row,image,(int)(random(360));
       }
     }
   }
