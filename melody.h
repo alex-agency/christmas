@@ -62,16 +62,29 @@ public:
 	  beepCount--;
 	}
 
+      	if( (millis() - time) < notePause ) {
+          return;
+        }
 	// skip if it last note or pause between notes
-	if( noteIndex >= numNotes || (millis() - time) < notePause )
-	  return;
+      if(noteIndex >= numNotes) {
+        // init timer1 again
+        cli();
+        TCCR1B &= ~ ( (1<<CS11) );
+        TCCR1B |= ( (1<<CS12) | (1<<CS10) );      
+        TCCR1B &= ~ ( (1<<WGM13) | (1<<WGM12) );
+        TCCR1A &= ~ ( (1<<WGM11) | (1<<WGM10) );
+        sei();
+        return;        
+      }
+        // stop timer1
+        TCCR1B = 0; TCCR1A = 0;
 
 	// play current note
 	playNote();
 
 	// change note cursor
 	noteIndex++;
-	time = millis();	
+	time = millis(); 
   };
 
 private:
@@ -118,7 +131,7 @@ private:
 											16 };
 	  beats 							= jingleBells_beats;
 
-	  tempo 							= 60*2;
+	  tempo 							= 60;
 	  numNotes 							= sizeof(jingleBells)/sizeof(uint16_t);
 	}
     // "The first noel" melody
@@ -145,7 +158,7 @@ private:
 											4,    4,    4,    4,    4,    4,    4,    8 };
 	  beats 							= firstNoel_beats;
 
-	  tempo 							= 60*2;
+	  tempo 							= 60;
 	  numNotes 							= sizeof(firstNoel)/sizeof(uint16_t);
 	}
 	// "What child is this" melody
@@ -174,7 +187,7 @@ private:
 				   							6,    4 };
 	  beats 							= whatChild_beats;
 
-	  tempo 							= 100*2;
+	  tempo 							= 100;
 	  numNotes 							= sizeof(whatChild)/sizeof(uint16_t);
 	}
 	// "R2D2" melody
@@ -187,22 +200,22 @@ private:
                                				2,    2,    2,    2,    2,    2,    2,    2 };
 	  beats 							= r2d2_beats;
 
-	  tempo 							= 40*2;
+	  tempo 							= 40;
 	  numNotes 							= sizeof(r2d2)/sizeof(uint16_t);
 	}
   };
 
   void playNote( void ) {
-	noTone(pin);
+        noTone(pin);
 		
 	int freq = notes[noteIndex] * 2;
-	int duration = tempo * beats[noteIndex];
+	int duration = (tempo * beats[noteIndex]);
 
 	if(DEBUG) printf_P(PSTR("MELODY: Info: Note #%u, freq: %u*2, duration: %u*%u.\n\r"),
       noteIndex, notes[noteIndex], beats[noteIndex], tempo);
 
 	if (freq > 0) {
-	  tone(pin, freq, duration); 
+	  tone(pin, freq, duration);
 	}
 	// to distinguish the notes, set a minimum time between them.
 	// the note's duration + 30% seems to work well:
